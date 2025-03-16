@@ -1,0 +1,249 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+}
+
+.navbar {
+    width: 100%;
+    background: #ff69b4;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 40px;
+    box-sizing: border-box;
+}
+
+.navbar .brand {
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.navbar .menu {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.file-upload-label {
+    background: #fff;
+    color: #ff69b4;
+    padding: 5px 10px;
+    border: 2px dashed #ff69b4;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#navbarFileInput {
+    display: none;
+}
+
+.theme-toggle-button {
+    background: #fff;
+    color: #ff69b4;
+    border: 2px solid #ff69b4;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dashboard-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 40px;
+    background: #fff;
+    min-height: calc(100vh - 60px);
+}
+
+.dashboard-container .dashboard-content {
+    display: none;
+}
+
+.dashboard-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.dashboard-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    flex: 1;
+    min-width: 300px;
+    color: #333;
+}
+
+.dashboard-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+table.dataTable thead th {
+    white-space: nowrap;
+}
+
+.buy-tag {
+    background-color: #e6ffe6;
+    color: #08A045;
+    padding: 3px 20px;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+.sell-tag {
+    background-color: #ffe6e6;
+    color: #B30000;
+    padding: 3px 20px;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+#themeToggle {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    && img {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+.loading {
+    width: 100%;
+    height: calc(100vh - 60px - 80px);
+    position: relative;
+}
+
+.loading-context {
+    background-color: transparent;
+    width: 40%;
+    height: 30%;
+    border-radius: 40px;
+    border-style: dashed;
+    border-color: #ddd;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    && div {
+        color: #adadad;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+#dropZone {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#dropZone.dragover {
+    background-color: #f0f0f0;
+    border-color: #000;
+}
+
+body.dark-mode {
+    background: #2d2d2d;
+    color: #ddd;
+}
+
+body.dark-mode .loading-context {
+    background-color: #555;
+    width: 40%;
+    height: 30%;
+    border-radius: 40px;
+    border-style: dashed;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    && div {
+        color: #adadad;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+body.dark-mode .navbar {
+    background: #333;
+    color: #ddd;
+}
+
+body.dark-mode .file-upload-label,
+body.dark-mode .theme-toggle-button {
+    color: #000;
+    border-color: #ddd;
+}
+
+body.dark-mode .dashboard-container {
+    background: #444;
+    color: #ddd;
+}
+
+body.dark-mode .dashboard-card {
+    background: #555;
+    border: 1px solid #666;
+    color: #ddd;
+}
+
+body.dark-mode table.dataTable thead th {
+    background-color: #555;
+    color: #fff;
+}
+
+body.dark-mode table.dataTable tbody {
+    background-color: #444;
+    color: #ddd;
+}
+
+body.dark-mode table.dataTable tbody tr {
+    background-color: #444;
+    color: #ddd;
+}
+
+body.dark-mode table.dataTable tbody tr:hover {
+    background-color: #555;
+    color: #fff;
+}
+
+#chartContainer {
+    max-height: 400px;
+    height: 400px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+#chartLine {
+    max-height: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+}

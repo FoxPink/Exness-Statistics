@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grechen+Fuemen&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="brand" style="font-family: 'Grechen Fuemen' , cursive;">
+            <img src="./assets/img/logo.png" alt="Logo" style="height:40px; margin-right:10px;">
+            FoxPink
+        </div>
+        <div class="menu">
+            <label for="navbarFileInput" id="fileLabel" class="file-upload-label">Choose file</label>
+            <input type="file" id="navbarFileInput" accept=".xls, .xlsx">
+            <button id="themeToggle">
+                <img id="themeIcon" src="./assets/img/sun-mode.png" alt="Theme Icon" width="24" height="24">
+            </button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="loading">
+            <div class="loading-context" id="dropZone">
+                <input type="file" id="navbarFileInput" accept=".xls, .xlsx" style="display: none;">
+                <div style="font-size: larger;">Drag & Drop or Click to Upload Excel File from Exness</div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="dashboard-row">
+                <div class="dashboard-card">
+                    <div id="chartContainer">
+                        <canvas id="chartLine"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <div id="chartContainer">
+                        <canvas id="chartBar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-row">
+                <div class="dashboard-card" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <h3>Transaction list</h3>
+                        <div style="display: flex; justify-content: space-between; gap: 10px;">
+                            <h3>Statistical:</h3>
+                            <h3 class="sum"></h3>
+                        </div>
+                    </div>
+                    <table id="excelTable" class="display" style="width:100%"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <!-- SheetJS (CDN) -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js (CDN) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (localStorage.getItem("theme") === "dark") {
+                document.body.classList.add("dark-mode")
+            } else {
+                document.body.classList.remove("dark-mode")
+            }
+
+            const themeToggle = document.getElementById('themeToggle')
+            const themeIcon = document.getElementById('themeIcon')
+
+            function updateThemeIcon() {
+                if (document.body.classList.contains("dark-mode")) {
+                    themeIcon.src = "./assets/img/sun-mode.png"
+                } else {
+                    themeIcon.src = "./assets/img/dark-mode.png"
+                }
+            }
+
+            if (localStorage.getItem("theme") === "dark") {
+                document.body.classList.add("dark-mode")
+            }
+            updateThemeIcon()
+
+            themeToggle.addEventListener('click', function () {
+                document.body.classList.toggle("dark-mode")
+                localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light")
+                updateThemeIcon()
+            })
+
+            let table = $('#excelTable').DataTable({
+                columns: [
+                    { title: 'Ticket' },
+                    {
+                        title: 'Opening time UTC',
+                        render: function (data, type, row, meta) {
+                            if (data) {
+                                let dateObj = new Date(data + "Z")
+
+                                let day = String(dateObj.getUTCDate()).padStart(2, "0")
+                                let month = String(dateObj.getUTCMonth() + 1).padStart(2, "0")
+                                let year = dateObj.getUTCFullYear()
+
+                                let hours = String(dateObj.getUTCHours()).padStart(2, "0")
+                                let minutes = String(dateObj.getUTCMinutes()).padStart(2, "0")
+                                let seconds = String(dateObj.getUTCSeconds()).padStart(2, "0")
+
+                                return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+                            }
+                            return data
+                        }
+
+                    },
+                    {
+                        title: 'Closing time UTC',
+                        render: function (data, type, row, meta) {
+                            if (data) {
+                                let dateObj = new Date(data + "Z")
+
+                                let day = String(dateObj.getUTCDate()).padStart(2, "0")
+                                let month = String(dateObj.getUTCMonth() + 1).padStart(2, "0")
+                                let year = dateObj.getUTCFullYear()
+
+                                let hours = String(dateObj.getUTCHours()).padStart(2, "0")
+                                let minutes = String(dateObj.getUTCMinutes()).padStart(2, "0")
+                                let seconds = String(dateObj.getUTCSeconds()).padStart(2, "0")
+
+                                return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+                            }
+                            return data
+                        }
+                    },
+                    {
+                        title: 'Type',
+                        createdCell: function (td, cellData) {
+                            $(td).css("text-align", "center")
+                            const value = cellData.toString().toLowerCase()
+                            if (value === "buy") {
+                                $(td).html('<span class="buy-tag">' + cellData + '</span>')
+                            } else if (value === "sell") {
+                                $(td).html('<span class="sell-tag">' + cellData + '</span>')
+                            } else {
+                                $(td).text(cellData)
+                            }
+                        }
+                    },
+                    { title: 'Lots' },
+                    { title: 'Original position size' },
+                    { title: 'Symbol' },
+                    {
+                        title: 'Opening price',
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "blue",
+                                "font-weight": "bold"
+                            })
+                        }
+                    },
+                    {
+                        title: 'Closing price',
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "gold",
+                                "font-weight": "bold"
+                            })
+                        }
+                    },
+                    { title: 'Stop loss' },
+                    { title: 'Take profit' },
+                    {
+                        title: 'Commission USD',
+                        className: "dt-body-right"
+                    },
+                    {
+                        title: 'Swap USD',
+                        className: "dt-body-right"
+                    },
+                    { title: 'Profit USD' },
+                    { title: 'Equity USD' },
+                    { title: 'Margin level' },
+                    {
+                        title: 'Close reason',
+                        createdCell: function (td, cellData) {
+                            $(td).css("text-align", "center")
+                            $(td).text(cellData.toString().toUpperCase())
+                            if (cellData === 'sl') {
+                                $(td).css({
+                                    "color": "#B30000",
+                                })
+                            } else if (cellData === 'tp') {
+                                $(td).css({
+                                    "color": "#08A045",
+                                })
+                            }
+                        }
+                    }
+                ],
+                scrollX: true,
+                scrollY: "400px",
+                scrollCollapse: true,
+                columnDefs: [
+                    {
+                        targets: 13,
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            const value = parseFloat(cellData)
+                            if (!isNaN(value)) {
+                                if (value < 0) {
+                                    $(td).css({
+                                        "background-color": "#ffe6e6",
+                                        "color": "#B30000",
+                                        "font-weight": "bold"
+                                    })
+                                } else {
+                                    $(td).css({
+                                        "background-color": "#e6ffe6",
+                                        "color": "#08A045",
+                                        "font-weight": "bold"
+                                    })
+                                }
+                            }
+                        }
+                    },
+                    {
+                        targets: 9,
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "#B30000",
+                                "font-weight": "bold"
+                            })
+                        }
+                    },
+                    {
+                        targets: 10,
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "#08A045",
+                                "font-weight": "bold"
+                            })
+                        }
+                    },
+                    {
+                        targets: 7,
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "blue",
+                                "font-weight": "bold"
+                            })
+                        }
+                    },
+                    {
+                        targets: 8,
+                        className: "dt-body-right",
+                        createdCell: function (td, cellData) {
+                            $(td).css({
+                                "color": "gold",
+                                "font-weight": "bold"
+                            })
+                        }
+                    }
+                ]
+            })
+
+            function updateTotalProfit() {
+                let totalProfit = 0
+                table.column(13).data().each(function (value) {
+                    let profit = parseFloat(value)
+                    if (!isNaN(profit)) {
+                        totalProfit += profit
+                    }
+                })
+
+                document.querySelector(".sum").innerText = `${totalProfit.toFixed(2)}$`
+
+                if (totalProfit < 0) {
+                    document.querySelector(".sum").style.color = "#B30000"
+                } else {
+                    document.querySelector(".sum").style.color = "#08A045"
+                }
+            }
+
+            function updateChart(table) {
+                const data = table.rows().data().toArray()
+                const labels = []
+                const profits = []
+
+                data.forEach(row => {
+                    const closingTime = row[2]
+                    const profit = parseFloat(row[13])
+                    if (closingTime && !isNaN(profit)) {
+                        labels.push(closingTime)
+                        profits.push(profit)
+                    }
+                })
+
+                const sortedData = labels.map((label, index) => ({
+                    label: new Date(label).toLocaleString(),
+                    profit: profits[index]
+                })).sort((a, b) => new Date(a.label) - new Date(b.label))
+
+                const sortedLabels = sortedData.map(item => item.label)
+                const sortedProfits = sortedData.map(item => item.profit)
+
+                const isDarkMode = document.body.classList.contains("dark-mode")
+
+                const textColor = isDarkMode ? "#ffffff" : "#000000"
+                const gridColor = isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"
+
+                const ctx = document.getElementById("chartLine").getContext("2d")
+                if (window.lineChart) {
+                    window.lineChart.destroy()
+                }
+
+                window.lineChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: sortedLabels,
+                        datasets: [{
+                            label: "Profit over time",
+                            data: sortedProfits,
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            backgroundColor: "rgba(75, 192, 192, 0.2)",
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    color: textColor
+                                },
+                                ticks: {
+                                    color: textColor,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Profit (USD)",
+                                    color: textColor
+                                },
+                                ticks: {
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: textColor
+                                },
+                            }
+                        }
+                    }
+                })
+
+                const ctxBar = document.getElementById("chartBar").getContext("2d")
+                if (window.barChart) {
+                    window.barChart.destroy()
+                }
+
+                const positiveProfits = sortedProfits.map(profit => (profit >= 0 ? profit : 0))
+                const negativeProfits = sortedProfits.map(profit => (profit < 0 ? profit : 0))
+
+                window.barChart = new Chart(ctxBar, {
+                    type: "bar",
+                    data: {
+                        labels: sortedLabels,
+                        datasets: [
+                            {
+                                label: "Profit",
+                                data: positiveProfits,
+                                backgroundColor: "rgba(0, 200, 0, 0.6)",
+                                borderColor: "rgba(0, 200, 0, 1)",
+                                borderWidth: 1
+                            },
+                            {
+                                label: "Loss",
+                                data: negativeProfits,
+                                backgroundColor: "rgba(255, 0, 0, 0.6)",
+                                borderColor: "rgba(255, 0, 0, 1)",
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    color: textColor
+                                },
+                                ticks: {
+                                    color: textColor,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Loss (USD)",
+                                    color: textColor
+                                },
+                                ticks: {
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: textColor,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+
+            }
+
+            const dropZone = document.getElementById("dropZone")
+            const navbarFileInput = document.getElementById('navbarFileInput')
+            const fileLabel = document.getElementById('fileLabel')
+
+            dropZone.addEventListener("click", () => navbarFileInput.click())
+
+            navbarFileInput.addEventListener('change', function (e) {
+                const file = e.target.files[0]
+                if (file) {
+                    handleFile(file)
+                }
+            })
+
+            dropZone.addEventListener("dragover", (e) => {
+                e.preventDefault()
+                dropZone.classList.add("dragover")
+            })
+
+            dropZone.addEventListener("dragleave", () => {
+                dropZone.classList.remove("dragover")
+            })
+
+            dropZone.addEventListener("drop", (e) => {
+                e.preventDefault()
+                dropZone.classList.remove("dragover")
+
+                const file = e.dataTransfer.files[0]
+                if (file) {
+                    navbarFileInput.files = new DataTransfer().files
+                    handleFile(file)
+                }
+            })
+
+            function handleFile(file) {
+                fileLabel.innerText = file.name
+                document.querySelector('.loading').style.display = "block"
+
+                const reader = new FileReader()
+                reader.onload = function (event) {
+                    const data = event.target.result
+                    const workbook = XLSX.read(data, { type: 'binary' })
+                    const firstSheetName = workbook.SheetNames[0]
+                    const worksheet = workbook.Sheets[firstSheetName]
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                        header: 1,
+                        defval: ""
+                    })
+
+                    document.querySelector('.dashboard-content').style.display = "block"
+                    document.querySelector('.loading').style.display = "none"
+
+                    table.clear()
+                    jsonData.slice(1).forEach(row => {
+                        table.row.add(row)
+                    })
+                    table.draw()
+
+                    updateTotalProfit()
+                    updateChart(table)
+                }
+                reader.onerror = function (ex) {
+                    console.error("Lỗi khi đọc file:", ex)
+                }
+                reader.readAsBinaryString(file)
+            }
+        });
+    </script>
+</body>
+
+</html>
