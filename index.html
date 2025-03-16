@@ -99,6 +99,7 @@
                 document.body.classList.toggle("dark-mode")
                 localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light")
                 updateThemeIcon()
+                updateChart(table)
             })
 
             let table = $('#excelTable').DataTable({
@@ -291,9 +292,9 @@
                 document.querySelector(".sum").innerText = `${totalProfit.toFixed(2)}$`
 
                 if (totalProfit < 0) {
-                    document.querySelector(".sum").style.color = "#B30000"
+                    document.querySelector(".sum").style.color = "rgb(221 0 0)"
                 } else {
-                    document.querySelector(".sum").style.color = "#08A045"
+                    document.querySelector(".sum").style.color = "rgb(0 242 97)"
                 }
             }
 
