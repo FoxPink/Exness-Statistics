@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Grechen+Fuemen&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
 </head>
 
 <body>
@@ -51,11 +52,22 @@
 
             <div class="dashboard-row">
                 <div class="dashboard-card" style="width: 100%;">
-                    <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; justify-content: space-between; gap: 50px;">
                         <h3>Transaction list</h3>
+                        <div class="review" style="flex: 1;"></div>
                         <div style="display: flex; justify-content: space-between; gap: 10px;">
-                            <h3>Statistical:</h3>
-                            <h3 class="sum"></h3>
+                            <div style="display: flex; gap: 5px;">
+                                <h3>Profitable:</h3>
+                                <h3 class="profitable"></h3>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <h3>No profit:</h3>
+                                <h3 class="no_profit"></h3>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <h3>Statistical:</h3>
+                                <h3 class="sum"></h3>
+                            </div>
                         </div>
                     </div>
                     <table id="excelTable" class="display" style="width:100%"></table>
@@ -71,6 +83,8 @@
     <!-- SheetJS (CDN) -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <!-- Chart.js (CDN) -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    <!-- slick slider -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             if (localStorage.getItem("theme") === "dark") {
@@ -291,11 +305,70 @@
 
                 document.querySelector(".sum").innerText = `${totalProfit.toFixed(2)}$`
 
+                document.querySelector(".profitable").innerText = table.column(13).data().filter(function (value) {
+                    return parseFloat(value) > 0
+                }).count()
+                document.querySelector(".profitable").style.color = "rgb(0 242 97)"
+
+                document.querySelector(".no_profit").innerText = table.column(13).data().filter(function (value) {
+                    return parseFloat(value) < 0
+                }).count()
+                document.querySelector(".no_profit").style.color = "rgb(221 0 0)"
+
                 if (totalProfit < 0) {
                     document.querySelector(".sum").style.color = "rgb(221 0 0)"
                 } else {
                     document.querySelector(".sum").style.color = "rgb(0 242 97)"
                 }
+            }
+
+            function updateSymbolSum() {
+                let symbolSums = {}
+
+                table.rows().data().each(function (row) {
+                    let symbol = row[6]
+
+                    if (typeof symbol === 'string' && symbol.trim().toLowerCase() === "symbol") {
+                        return
+                    }
+
+                    let price = parseFloat(row[13]) || 0
+
+                    if (symbol in symbolSums) {
+                        symbolSums[symbol] += price
+                    } else {
+                        symbolSums[symbol] = price
+                    }
+                })
+
+                let sliderItems = ""
+                for (let symbol in symbolSums) {
+                    let sum = symbolSums[symbol]
+                    let color = sum < 0 ? "rgb(221, 0, 0)" : (sum > 0 ? "rgb(0, 242, 97)" : "black")
+                    sliderItems += `<div class="slide">${symbol}: <span style="color: ${color};">${sum.toFixed(2)}</span></div>`
+                }
+
+                document.querySelector('.review').innerHTML = `<div class="slider">${sliderItems}</div>`
+
+                if ($('.slider').hasClass('slick-initialized')) {
+                    $('.slider').slick('unslick')
+                }
+
+                $('.slider').slick({
+                    infinite: true,
+                    slidesToShow: 3,
+                    slidesToScroll: 1,
+                    autoplay: true,
+                    autoplaySpeed: 0,
+                    speed: 5000,
+                    cssEase: 'linear',
+                    arrows: false,
+                    dots: false,
+                    pauseOnHover: false,
+                    draggable: false,
+                    swipe: false,
+                    touchMove: false
+                })
             }
 
             function updateChart(table) {
@@ -520,6 +593,7 @@
                     table.draw()
 
                     updateTotalProfit()
+                    updateSymbolSum()
                     updateChart(table)
                 }
                 reader.onerror = function (ex) {
